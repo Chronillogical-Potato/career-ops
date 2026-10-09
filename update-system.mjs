@@ -266,6 +266,7 @@ const SYSTEM_PATHS = [
   'lib/ascii-fold.mjs',
   'lib/cli-flags.mjs',
   'lib/gemini-node-floor.mjs',
+  'lib/node-floor.mjs',
   'lib/local-today.mjs',
   'lib/parse-date.mjs',
   'lib/placeholder-cell.mjs',
