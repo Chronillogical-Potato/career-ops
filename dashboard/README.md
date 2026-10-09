@@ -34,6 +34,12 @@ The binary accepts `--path <dir>` pointing at a career-ops directory
 (default `.`). The data loader tries both `{path}/applications.md` and
 `{path}/data/applications.md` for layout compatibility.
 
+In the report viewer, `http(s)` links (bare URLs and markdown links) are
+clickable in terminals that support OSC 8 hyperlinks (iTerm2, WezTerm, kitty,
+VS Code, Windows Terminal, recent GNOME Terminal). Other terminals show the
+same text, unlinked. Other link schemes stay plain, because report text comes
+from untrusted job postings.
+
 ## Package layout
 
 - `main.go` — entry point, flag parsing, top-level Bubble Tea model and view
