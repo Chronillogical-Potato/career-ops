@@ -492,8 +492,8 @@ const scripts = [
   { name: 'invite-match.mjs --self-test', expectExit: 0 },
   { name: 'tracker-sync-check.mjs --self-test', expectExit: 0 },
   { name: 'updater-migration-tests.mjs', expectExit: 0 },
-  // The second outlier, on the same grounds as tracker-writer-lock-tests.mjs
-  // below and measured the same way. It spawns five node subprocesses
+  // An outlier, measured on Windows CI the way tracker-writer-lock-tests.mjs
+  // once was (#2906). It spawns five node subprocesses
   // (merge-tracker, verify-pipeline) against throwaway mkdtempSync trees, and
   // that cost is the behaviour under test rather than slack to be trimmed.
   //
@@ -508,22 +508,10 @@ const scripts = [
   // SLOW_SCRIPT_WARN_FRACTION could not have given notice: at a typical 12s of
   // 30s this never reaches the 75% warning, so it goes from silent to killed
   // with nothing in between. The ceiling is the only signal it has.
+  //
+  // The writer-lock suite has since been made fast and moved into tests/ under
+  // the shared cap (#4759); #4758 is the same work for this one.
   { name: 'tracker-columns-tests.mjs', expectExit: 0, timeoutMs: 180_000 },
-  // The one script in this list that genuinely needs longer than the shared
-  // budget. It spawns competing writer processes for 27 contention cases, and
-  // that cost is the behaviour under test rather than slack to be trimmed.
-  //
-  // Measured on current main on a 24-core Windows box, four consecutive runs:
-  // 13.4s, 17.8s, 19.8s, 20.1s — already 67% of the default 30s before a
-  // 2-core CI runner's load is added. On windows-latest it crossed the line and
-  // was killed mid-matrix (`exit null, signal SIGTERM`), while every other
-  // check on the same commit passed (#2906).
-  //
-  // Raised here rather than in run()'s default so the outlier is treated as an
-  // outlier: every other script keeps the 30s bound, and a NEW script that
-  // starts taking half a minute still fails loudly instead of inheriting a
-  // budget sized for this one.
-  { name: 'tracker-writer-lock-tests.mjs', expectExit: 0, timeoutMs: 180_000 },
   { name: 'validate-portals.mjs --file templates/portals.example.yml', expectExit: 0 },
   { name: 'validate-system-paths-coverage.mjs --self-test', expectExit: 0 },
   // The bare coverage run is NOT here on purpose: this section executes each
