@@ -14,6 +14,22 @@ export const ROOT = join(__dirname, '..');   // repo root (tests/ lives one leve
 export const QUICK = process.argv.includes('--quick');
 export const NODE = process.execPath;
 
+// The suite must never follow a developer's own tracker override into their
+// real data. CAREER_OPS_TRACKER outranks the CAREER_OPS_ROOT that fixtures pin,
+// so with it set in the shell a test that runs normalize-statuses.mjs against
+// its fixture root rewrote the developer's tracker instead (and left a .bak
+// beside it), and a dozen checks failed on rows that were not theirs.
+//
+// Blanked here because test-all.mjs imports this module before it runs
+// anything, so the runner and each child it spawns start without the override;
+// a suite that imports these helpers is covered when run on its own as well.
+// Blanked rather than deleted: every reader trims the value and treats an empty
+// one as unset, which is also how the Go tests neutralise it
+// (`t.Setenv("CAREER_OPS_TRACKER", "")`), and a variable that is set is not
+// overwritten by a later .env load (#4707 did the same for one test and
+// CAREER_OPS_PIPELINE). A test that needs the override sets its own.
+process.env.CAREER_OPS_TRACKER = '';
+
 /**
  * A merge-tracker fixture must not consult the install's batch history.
  * Keep the default state path beside the fixture additions directory; tests
