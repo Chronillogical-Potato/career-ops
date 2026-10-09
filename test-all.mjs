@@ -5623,24 +5623,23 @@ try {
     fail(`tracker writers bypass shared transaction scope: ${unsafeWriters.join(', ')}`);
   }
 
-  const dashboardWriter = readFile('dashboard/internal/data/career.go');
-  const dashboardStart = dashboardWriter.indexOf('func UpdateApplicationStatusAndNotes(');
-  const dashboardTail = dashboardStart === -1 ? '' : dashboardWriter.slice(dashboardStart);
-  const nextDashboardFunction = dashboardTail.indexOf('\nfunc ', 1);
-  const dashboardBody = nextDashboardFunction === -1
-    ? dashboardTail
-    : dashboardTail.slice(0, nextDashboardFunction);
-  const acquireAt = dashboardBody.indexOf('acquireTrackerLock(');
-  const deferredReleaseAt = dashboardBody.indexOf('defer func()');
-  const readAt = dashboardBody.indexOf('os.ReadFile(filePath)');
-  const replaceAt = dashboardBody.indexOf('writeFileAtomic(filePath');
-  if (acquireAt >= 0 && deferredReleaseAt > acquireAt && readAt > deferredReleaseAt
-      && replaceAt > readAt
-      && !/os\.WriteFile\(filePath,\s*\[\]byte\(strings\.Join\(lines/.test(dashboardBody)) {
-    pass('dashboard tracker update structurally holds the lock across read and atomic replacement');
+  // The dashboard must use the same canonical writer as the CLI. Keep this
+  // boundary check beside the root-writer contract so a future UI refactor
+  // cannot silently reintroduce a direct tracker mutation that skips the
+  // shared lock, lifecycle ledger, or follow-up transaction.
+  const dashboardWriter = readFile('dashboard/internal/data/status_writer.go');
+  const runWriterStart = dashboardWriter.indexOf('func runStatusWriter(');
+  const runWriterBody = runWriterStart === -1 ? '' : dashboardWriter.slice(runWriterStart);
+  const delegatesToCanonicalWriter = runWriterBody.includes('set-status.mjs')
+    && runWriterBody.includes('exec.CommandContext')
+    && runWriterBody.includes('"--report-link"')
+    && !/writeFile(?:Atomic|Sync)\s*\(/.test(runWriterBody);
+  if (delegatesToCanonicalWriter) {
+    pass('dashboard status writer delegates tracker mutations to set-status.mjs transaction scope');
   } else {
-    fail('dashboard tracker update escapes the cross-runtime transaction scope');
+    fail('dashboard status writer bypasses the shared set-status transaction scope');
   }
+
 } catch (e) {
   fail(`tracker writer lock contract tests crashed: ${e.message}`);
 }

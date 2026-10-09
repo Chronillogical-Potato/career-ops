@@ -157,6 +157,9 @@ func (m *ViewerModel) Resize(width, height int) {
 
 func (m ViewerModel) Update(msg tea.Msg) (ViewerModel, tea.Cmd) {
 	switch msg := msg.(type) {
+	case StatusUpdateFailedMsg:
+		m.flash = "Could not update status: " + msg.Err
+		return m, nil
 	case tea.KeyMsg:
 		m.flash = ""
 		if m.statusPicker {
@@ -861,6 +864,10 @@ func (m ViewerModel) renderFooter() string {
 		Background(m.theme.Surface).
 		Width(m.width).
 		Padding(0, 1)
+
+	if m.flash != "" {
+		return style.Foreground(m.theme.Yellow).Render(sanitizeFlash(m.flash))
+	}
 
 	keyStyle := lipgloss.NewStyle().Bold(true).Foreground(m.theme.Text)
 	descStyle := lipgloss.NewStyle().Foreground(m.theme.Subtext)

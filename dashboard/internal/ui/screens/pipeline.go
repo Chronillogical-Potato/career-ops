@@ -79,6 +79,12 @@ type PipelineUpdateStatusMsg struct {
 	NewStatus     string
 }
 
+// StatusUpdateFailedMsg exposes a failed tracker write in the active screen.
+// Stderr is hidden while the dashboard occupies the terminal's alt-screen.
+type StatusUpdateFailedMsg struct {
+	Err string
+}
+
 // PipelineUpdateStatusAndNotesMsg requests an atomic status + notes update.
 // Used by the discard reason picker (Issue 1380) to commit both changes in a
 // single tracker write.
@@ -499,6 +505,8 @@ func (m PipelineModel) Update(msg tea.Msg) (PipelineModel, tea.Cmd) {
 	case PipelineOpenFailedMsg:
 		m.flash = "Could not open " + msg.Target + ": " + msg.Err
 		return m, nil
+	case StatusUpdateFailedMsg:
+		m.flash = "Could not update status: " + msg.Err
 	case PipelineHistoryFailedMsg:
 		m.flash = "Status history unavailable; progress uses previous data: " + msg.Err
 		return m, nil
@@ -836,17 +844,6 @@ func (m PipelineModel) handleStatusPicker(msg tea.KeyMsg) (PipelineModel, tea.Cm
 		if app, ok := m.CurrentApp(); ok {
 			newStatus := m.currentStatusPairs()[m.statusCursor].Canonical
 			norm := data.NormalizeStatus(newStatus)
-			if norm == "hired" {
-				m.hiredApp = app
-				m.hiredStep = 1
-				return m, func() tea.Msg {
-					return PipelineUpdateStatusMsg{
-						CareerOpsPath: m.careerOpsPath,
-						App:           app,
-						NewStatus:     newStatus,
-					}
-				}
-			}
 			if norm == "discarded" || norm == "skip" {
 				return m, func() tea.Msg {
 					return m.startDiscardFlow(app, newStatus)
