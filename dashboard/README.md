@@ -6,6 +6,8 @@ Standalone Go TUI for browsing the career-ops pipeline.
 
 A terminal UI over the application tracker: filter tabs, sort modes,
 grouped/flat views, lazy-loaded report previews, and an inline status picker.
+The report viewer opens the job posting with `o`, using the tracker row's URL
+or, failing that, the report's `**URL:**` header.
 It is isolated from the Node core — optional, never required by any other
 component.
 
